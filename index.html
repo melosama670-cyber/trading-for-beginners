@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trading for Beginners</title>
+<style>
+  :root {
+    --bg: #12151B;
+    --surface: #1B1F28;
+    --surface-2: #232834;
+    --border: #2E3542;
+    --text: #EDEFF3;
+    --text-dim: #9198A6;
+    --text-faint: #626A78;
+    --up: #2FBF8F;
+    --down: #E2574C;
+    --gold: #D9A54B;
+    --gold-dim: #6E5A34;
+    --mono: 'SF Mono', 'Consolas', 'Menlo', monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  .app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding-bottom: 90px;
+  }
+  header.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 18px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  header.top .brand { display: flex; flex-direction: column; }
+  header.top .brand .name { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  header.top .brand .tag { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+  header.top .streak { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--gold); font-family: var(--mono); }
+
+  main { padding: 18px; }
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .progress-row { display: flex; gap: 10px; margin-bottom: 20px; }
+  .pcard {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .pcard .label { font-size: 12px; color: var(--text-dim); }
+  .pcard .value { font-family: var(--mono); font-size: 22px; margin-top: 4px; }
+
+  .section-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 22px 0 10px;
+  }
+
+  .lesson-list { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); }
+  .lesson-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 14px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .lesson-row:last-child { border-bottom: none; }
+  .lesson-row .num {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 12px;
+    background: var(--surface-2); color: var(--text-dim); flex-shrink: 0;
+  }
+  .lesson-row.done .num { background: rgba(47,191,143,0.15); color: var(--up); }
+  .lesson-row .info { flex: 1; }
+  .lesson-row .title { font-size: 15px; }
+  .lesson-row .meta { font-size: 12px; color: var(--text-faint); margin-top: 2px; }
+  .lesson-row .status { font-size: 12px; color: var(--text-faint); }
+  .lesson-row.done .status { color: var(--up); }
+  .lesson-row.locked { opacity: 0.5; pointer-events: none; }
+
+  .action-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-top: 14px;
+  }
+  .action-card .head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .action-card .head .title { font-size: 15px; font-weight: 600; }
+  .action-card p.desc { font-size: 13px; color: var(--text-dim); margin: 0 0 12px; line-height: 1.5; }
+
+  button.primary {
+    width: 100%;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button.primary:active { transform: scale(0.98); }
+  button.gold { background: var(--gold); color: #1A1305; }
+  button.ghost {
+    width: 100%;
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .fine {
+    font-size: 11px;
+    color: var(--text-faint);
+    margin: 10px 0 0;
+    line-height: 1.5;
+  }
+
+  /* Lesson view */
+  .back-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; cursor: pointer; color: var(--text-dim); font-size: 13px; }
+  .lesson-title { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .lesson-sub { font-size: 13px; color: var(--text-dim); margin: 0 0 18px; }
+  .lesson-body p { font-size: 15px; line-height: 1.7; color: var(--text); margin: 0 0 14px; }
+  .lesson-body .callout {
+    background: var(--surface);
+    border-left: 3px solid var(--gold);
+    border-radius: 0;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: var(--text-dim);
+    margin: 16px 0;
+  }
+  .quiz-block { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .quiz-q { font-size: 15px; margin: 0 0 12px; }
+  .quiz-opt {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .quiz-opt.correct { border-color: var(--up); background: rgba(47,191,143,0.1); color: var(--up); }
+  .quiz-opt.wrong { border-color: var(--down); background: rgba(226,87,76,0.1); color: var(--down); }
+  .quiz-explain { font-size: 13px; color: var(--text-dim); margin: 10px 0 0; display: none; line-height: 1.6; }
+  .quiz-explain.show { display: block; }
+
+  /* Simulator */
+  .balance-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+  .balance-row .label { font-size: 12px; color: var(--text-dim); }
+  .balance-row .value { font-family: var(--mono); font-size: 28px; }
+  .pair-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .pair-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    font-family: var(--mono);
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .pair-tab.active { border-color: var(--gold); color: var(--gold); }
+  .price-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px; text-align: center; margin-bottom: 16px; }
+  .price-card .pair-name { font-size: 13px; color: var(--text-dim); }
+  .price-card .price { font-family: var(--mono); font-size: 34px; margin: 6px 0; }
+  .price-card .change { font-family: var(--mono); font-size: 13px; }
+  .price-card .change.up { color: var(--up); }
+  .price-card .change.down { color: var(--down); }
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 10px 8px;
+    margin-bottom: 16px;
+  }
+  .chart-wrap canvas { display: block; width: 100%; height: 140px; }
+  .trade-row { display: flex; gap: 10px; margin-bottom: 10px; }
+  .trade-row button { flex: 1; border: none; border-radius: 8px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; }
+  .buy-btn { background: rgba(47,191,143,0.15); color: var(--up); }
+  .sell-btn { background: rgba(226,87,76,0.15); color: var(--down); }
+  .lot-row { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .lot-row label { font-size: 13px; color: var(--text-dim); }
+  .lot-row input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 14px;
+  }
+  .positions-list { display: flex; flex-direction: column; gap: 8px; }
+  .position-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .position-row .pinfo .p1 { font-size: 14px; }
+  .position-row .pinfo .p2 { font-size: 12px; color: var(--text-faint); font-family: var(--mono); margin-top: 2px; }
+  .position-row .pnl { font-family: var(--mono); font-size: 14px; text-align: right; }
+  .position-row .close-btn { font-size: 11px; color: var(--text-faint); border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; margin-top: 4px; cursor: pointer; background: none; }
+  .empty-note { font-size: 13px; color: var(--text-faint); text-align: center; padding: 20px 0; }
+
+  nav.tabbar {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    max-width: 480px;
+    margin: 0 auto;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+  }
+  nav.tabbar .tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px 4px 10px;
+    font-size: 11px;
+    color: var(--text-faint);
+    cursor: pointer;
+  }
+  nav.tabbar .tab.active { color: var(--gold); }
+  nav.tabbar .tab .icon { font-size: 18px; display: block; margin-bottom: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="top">
+    <div class="brand">
+      <span class="name">Trading for Beginners</span>
+      <span class="tag">Learn first, practice safely</span>
+    </div>
+    <div class="streak"><span id="streak-count">0</span> day streak</div>
+  </header>
+
+  <main>
+
+    <!-- HOME VIEW -->
+    <section class="view active" id="view-home">
+      <div class="progress-row">
+        <div class="pcard">
+          <div class="label">Lessons done</div>
+          <div class="value"><span id="lessons-done">0</span> / <span id="lessons-total">5</span></div>
+        </div>
+        <div class="pcard">
+          <div class="label">Demo balance</div>
+          <div class="value" id="home-balance">$10,000</div>
+        </div>
+      </div>
+
+      <div class="section-label">Lessons</div>
+      <div class="lesson-list" id="lesson-list"></div>
+
+      <div class="action-card">
+        <div class="head"><span class="title">Practice simulator</span></div>
+        <p class="desc">Trade EUR/USD with virtual money. No real funds, no risk.</p>
+        <button class="primary" onclick="goto('view-sim')">Open simulator</button>
+      </div>
+
+      <div class="action-card">
+        <div class="head"><span class="title">Ready for a real account?</span></div>
+        <p class="desc">Our recommended broker. Create your account in a few minutes.</p>
+        <button class="primary gold" id="broker-btn" onclick="openBroker()">Create account</button>
+        <p class="fine">We may earn a commission if you sign up through this link. Trading involves risk and you can lose money. This app is educational and not financial advice.</p>
+      </div>
+    </section>
+
+    <!-- LESSON VIEW -->
+    <section class="view" id="view-lesson">
+      <div class="back-row" onclick="goto('view-home')">&larr; Back to lessons</div>
+      <h1 class="lesson-title" id="lesson-title"></h1>
+      <p class="lesson-sub" id="lesson-sub"></p>
+      <div class="lesson-body" id="lesson-body"></div>
+      <div class="quiz-block" id="quiz-block"></div>
+    </section>
+
+    <!-- SIMULATOR VIEW -->
+    <section class="view" id="view-sim">
+      <div class="back-row" onclick="goto('view-home')">&larr; Back home</div>
+      <div class="balance-row">
+        <div>
+          <div class="label">Demo balance</div>
+          <div class="value" id="sim-balance">$10,000.00</div>
+        </div>
+        <div style="text-align:right;">
+          <div class="label">Open P/L</div>
+          <div class="value" id="sim-pl" style="font-size:18px;">$0.00</div>
+        </div>
+      </div>
+
+      <div class="pair-tabs" id="pair-tabs"></div>
+
+      <div class="price-card">
+        <div class="pair-name" id="price-pair">EUR/USD</div>
+        <div class="price" id="price-value">1.0850</div>
+        <div class="change up" id="price-change">+0.0000 (0.00%)</div>
+      </div>
+
+      <div class="chart-wrap">
+        <canvas id="price-chart"></canvas>
+      </div>
+
+      <div class="lot-row">
+        <label>Lot size</label>
+        <input type="number" id="lot-size" value="0.10" step="0.01" min="0.01" />
+      </div>
+      <div class="trade-row">
+        <button class="buy-btn" onclick="openPosition('buy')">Buy</button>
+        <button class="sell-btn" onclick="openPosition('sell')">Sell</button>
+      </div>
+
+      <div class="section-label">Open positions</div>
+      <div class="positions-list" id="positions-list">
+        <div class="empty-note">No open positions yet. Place your first practice trade above.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <nav class="tabbar">
+    <div class="tab active" data-tab="view-home" onclick="goto('view-home')">
+      <span class="icon">&#9679;</span>Home
+    </div>
+    <div class="tab" data-tab="view-sim" onclick="goto('view-sim')">
+      <span class="icon">&#9670;</span>Simulator
+    </div>
+  </nav>
+
+</div>
+
+<script>
+/* ---------- CONFIG ---------- */
+// Set your broker referral link here once you have it.
+const BROKER_LINK = "https://your-broker-referral-link.example.com";
+
+/* ---------- LESSON CONTENT ---------- */
+const LESSONS = [
+  {
+    id: 1,
+    title: "What is trading?",
+    minutes: 4,
+    sub: "The basics before anything else.",
+    body: [
+      "Trading means buying and selling something — a currency, a stock, a coin — hoping its price moves in your favor so you can sell for more than you paid, or buy back for less than you sold.",
+      "Trading is different from investing. Investing usually means holding something for years, expecting it to grow over time. Trading is shorter-term: days, hours, sometimes minutes.",
+      "People trade many kinds of markets: currencies (forex), company shares (stocks), cryptocurrencies, and commodities like gold or oil. This app focuses on forex, starting with the most traded pair in the world: EUR/USD."
+    ],
+    callout: "There is no shortcut to skill here. Every trader who does this well started exactly where you are now.",
+    quiz: [
+      {
+        q: "What's the main difference between trading and investing?",
+        options: ["Trading always uses more money", "Trading is typically shorter-term than investing", "Investing is illegal in most countries", "There is no real difference"],
+        correct: 1,
+        explain: "Investing usually means holding an asset for years. Trading works on much shorter timeframes."
+      }
+    ]
+  },
+  {
+    id: 2,
+    title: "How markets work",
+    minutes: 5,
+    sub: "Buyers, sellers, and the price you actually pay.",
+    body: [
+      "Every market has buyers and sellers. The price you see is where the most recent buyer and seller agreed to trade.",
+      "You'll see two prices quoted: the bid (what you can sell at) and the ask (what you can buy at). The small gap between them is called the spread, and it's effectively the cost of placing a trade.",
+      "When you buy, you're hoping the price rises so you can sell higher later. When you sell (sometimes called 'going short'), you're hoping the price falls so you can buy it back lower."
+    ],
+    callout: "A tighter spread means a cheaper trade. Major pairs like EUR/USD usually have the tightest spreads.",
+    quiz: [
+      {
+        q: "What is the spread?",
+        options: ["The total size of the market", "The gap between the bid and ask price", "A type of chart pattern", "The broker's phone number"],
+        correct: 1,
+        explain: "The spread is the small difference between the buy price (ask) and sell price (bid) — it's the built-in cost of trading."
+      }
+    ]
+  },
+  {
+    id: 3,
+    title: "Reading a chart",
+    minutes: 6,
+    sub: "Candlesticks, and what they tell you.",
+    body: [
+      "Most trading charts use candlesticks. Each candle shows four numbers for a time period: the open, high, low, and close price.",
+      "A candle is usually colored green (or hollow) if the price closed higher than it opened, and red (or filled) if it closed lower. The thin lines above and below the body are called wicks, and show the highest and lowest prices reached.",
+      "Support is a price level where buying has historically stepped in and stopped a fall. Resistance is the opposite — a level where selling has historically stopped a rise. Beginners often watch these levels before deciding to enter a trade."
+    ],
+    callout: "Don't worry about memorizing every pattern yet. Just get comfortable reading what a single candle tells you.",
+    quiz: [
+      {
+        q: "What does a single candlestick show?",
+        options: ["Only the closing price", "Open, high, low, and close for that period", "The trader's profit", "The spread only"],
+        correct: 1,
+        explain: "A candlestick packs four numbers into one shape: open, high, low, and close."
+      }
+    ]
+  },
+  {
+    id: 4,
+    title: "Managing risk",
+    minutes: 7,
+    sub: "The single most important lesson in this app.",
+    body: [
+      "A stop loss is an order that automatically closes your trade if the price moves against you past a level you set. It limits how much you can lose on a trade.",
+      "A take profit does the opposite: it closes your trade once you've reached a profit level you're happy with.",
+      "Most experienced traders risk only a small percentage of their account on any single trade, often 1-2%. That way, a string of losses doesn't wipe out the account.",
+      "Risk/reward ratio compares what you're risking to what you stand to gain. A trade risking $20 to potentially make $60 has a 1:3 risk/reward ratio."
+    ],
+    callout: "Beginners who skip risk management are the ones most likely to lose their whole account early on. This lesson matters more than any chart pattern.",
+    quiz: [
+      {
+        q: "What does a stop loss do?",
+        options: ["Guarantees a profit", "Automatically closes a losing trade at a level you set", "Increases your leverage", "Removes the spread"],
+        correct: 1,
+        explain: "A stop loss limits your downside by closing the trade automatically once the price hits your chosen level."
+      }
+    ]
+  },
+  {
+    id: 5,
+    title: "Common beginner mistakes",
+    minutes: 5,
+    sub: "Learn from these before they cost you.",
+    body: [
+      "Overtrading — placing too many trades out of boredom or excitement rather than a clear reason — is one of the fastest ways to lose money.",
+      "Revenge trading is trying to immediately win back a loss with a bigger, riskier trade. It usually makes things worse.",
+      "FOMO (fear of missing out) leads traders to jump into a trade late, after most of the move has already happened.",
+      "Trading without a stop loss, or moving it further away once a trade turns against you, is one of the most common ways beginners lose more than they intended."
+    ],
+    callout: "The practice simulator is exactly for making these mistakes safely, before they matter.",
+    quiz: [
+      {
+        q: "What is 'revenge trading'?",
+        options: ["A trading strategy used by professionals", "Trying to win back a loss immediately with a bigger trade", "Trading only major currency pairs", "Setting a stop loss"],
+        correct: 1,
+        explain: "Revenge trading means reacting emotionally to a loss with an oversized trade — it tends to compound the damage."
+      }
+    ]
+  }
+];
+
+const PAIRS = {
+  "EUR/USD": { base: 1.0850, decimals: 4 },
+  "GBP/USD": { base: 1.2650, decimals: 4 },
+  "USD/JPY": { base: 149.80, decimals: 2 }
+};
+let currentPair = "EUR/USD";
+let simPrices = {};
+let priceHistory = {};
+Object.keys(PAIRS).forEach(p => {
+  simPrices[p] = PAIRS[p].base;
+  priceHistory[p] = [PAIRS[p].base];
+});
+const MAX_HISTORY = 60;
+
+/* ---------- STATE (saved in this browser) ---------- */
+function loadState() {
+  const raw = localStorage.getItem('tfb_state');
+  if (raw) return JSON.parse(raw);
+  return { completedLessons: [], balance: 10000, positions: [], streak: 1 };
+}
+function saveState() {
+  localStorage.setItem('tfb_state', JSON.stringify(state));
+}
+let state = loadState();
+
+/* ---------- NAVIGATION ---------- */
+function goto(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === viewId));
+  window.scrollTo(0, 0);
+}
+
+function openBroker() {
+  window.open(BROKER_LINK, '_blank');
+}
+
+/* ---------- HOME RENDER ---------- */
+function renderHome() {
+  document.getElementById('lessons-total').textContent = LESSONS.length;
+  document.getElementById('lessons-done').textContent = state.completedLessons.length;
+  document.getElementById('home-balance').textContent = fmtMoney(state.balance);
+  document.getElementById('streak-count').textContent = state.streak;
+
+  const list = document.getElementById('lesson-list');
+  list.innerHTML = '';
+  LESSONS.forEach((lesson, idx) => {
+    const done = state.completedLessons.includes(lesson.id);
+    const prevDone = idx === 0 || state.completedLessons.includes(LESSONS[idx - 1].id);
+    const locked = !done && !prevDone;
+    const row = document.createElement('div');
+    row.className = 'lesson-row' + (done ? ' done' : '') + (locked ? ' locked' : '');
+    row.onclick = () => { if (!locked) openLesson(lesson.id); };
+    row.innerHTML = `
+      <div class="num">${done ? '&#10003;' : idx + 1}</div>
+      <div class="info">
+        <div class="title">${lesson.title}</div>
+        <div class="meta">${lesson.minutes} min</div>
+      </div>
+      <div class="status">${locked ? 'Locked' : done ? 'Done' : 'Start'}</div>
+    `;
+    list.appendChild(row);
+  });
+}
+
+/* ---------- LESSON RENDER ---------- */
+function openLesson(id) {
+  const lesson = LESSONS.find(l => l.id === id);
+  document.getElementById('lesson-title').textContent = lesson.title;
+  document.getElementById('lesson-sub').textContent = lesson.sub;
+  const body = document.getElementById('lesson-body');
+  body.innerHTML = lesson.body.map(p => `<p>${p}</p>`).join('') +
+    `<div class="callout">${lesson.callout}</div>`;
+
+  const quizBlock = document.getElementById('quiz-block');
+  quizBlock.innerHTML = '';
+  lesson.quiz.forEach((q, qi) => {
+    const qDiv = document.createElement('div');
+    qDiv.innerHTML = `<p class="quiz-q">${q.q}</p>`;
+    q.options.forEach((opt, oi) => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-opt';
+      btn.textContent = opt;
+      btn.onclick = () => answerQuiz(btn, qDiv, oi, q, lesson.id);
+      qDiv.appendChild(btn);
+    });
+    const explain = document.createElement('p');
+    explain.className = 'quiz-explain';
+    explain.textContent = q.explain;
+    qDiv.appendChild(explain);
+    quizBlock.appendChild(qDiv);
+  });
+
+  goto('view-lesson');
+}
+
+function answerQuiz(btn, qDiv, chosenIdx, q, lessonId) {
+  const already = qDiv.querySelector('.correct, .wrong');
+  if (already) return;
+  const opts = qDiv.querySelectorAll('.quiz-opt');
+  opts.forEach((o, i) => {
+    if (i === q.correct) o.classList.add('correct');
+    else if (i === chosenIdx) o.classList.add('wrong');
+  });
+  qDiv.querySelector('.quiz-explain').classList.add('show');
+  if (!state.completedLessons.includes(lessonId)) {
+    state.completedLessons.push(lessonId);
+    saveState();
+  }
+}
+
+/* ---------- SIMULATOR ---------- */
+function renderPairTabs() {
+  const wrap = document.getElementById('pair-tabs');
+  wrap.innerHTML = '';
+  Object.keys(PAIRS).forEach(p => {
+    const tab = document.createElement('div');
+    tab.className = 'pair-tab' + (p === currentPair ? ' active' : '');
+    tab.textContent = p;
+    tab.onclick = () => { currentPair = p; renderPairTabs(); renderPrice(); renderChart(); };
+    wrap.appendChild(tab);
+  });
+}
+
+function renderPrice() {
+  const info = PAIRS[currentPair];
+  const price = simPrices[currentPair];
+  document.getElementById('price-pair').textContent = currentPair;
+  document.getElementById('price-value').textContent = price.toFixed(info.decimals);
+  const change = price - info.base;
+  const pct = (change / info.base) * 100;
+  const changeEl = document.getElementById('price-change');
+  changeEl.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(info.decimals)} (${pct.toFixed(2)}%)`;
+  changeEl.className = 'change ' + (change >= 0 ? 'up' : 'down');
+}
+
+function tickPrices() {
+  Object.keys(PAIRS).forEach(p => {
+    const info = PAIRS[p];
+    const wiggle = (Math.random() - 0.5) * (info.decimals === 2 ? 0.06 : 0.0006);
+    simPrices[p] = Math.max(0.0001, simPrices[p] + wiggle);
+    priceHistory[p].push(simPrices[p]);
+    if (priceHistory[p].length > MAX_HISTORY) priceHistory[p].shift();
+  });
+  renderPrice();
+  renderChart();
+  renderPositions();
+}
+
+function renderChart() {
+  const canvas = document.getElementById('price-chart');
+  if (!canvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  const cssWidth = canvas.clientWidth;
+  const cssHeight = canvas.clientHeight || 140;
+  canvas.width = cssWidth * dpr;
+  canvas.height = cssHeight * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
+
+  const data = priceHistory[currentPair];
+  if (!data || data.length < 2) return;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = (max - min) || 0.0001;
+  const padTop = 8, padBottom = 8;
+  const plotHeight = cssHeight - padTop - padBottom;
+  const stepX = cssWidth / (MAX_HISTORY - 1);
+  const startX = cssWidth - (data.length - 1) * stepX;
+
+  const rising = data[data.length - 1] >= data[0];
+  const lineColor = rising ? '#2FBF8F' : '#E2574C';
+
+  // filled area under the line
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = startX + i * stepX;
+    const y = padTop + (1 - (v - min) / range) * plotHeight;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.lineTo(startX + (data.length - 1) * stepX, cssHeight);
+  ctx.lineTo(startX, cssHeight);
+  ctx.closePath();
+  ctx.fillStyle = rising ? 'rgba(47,191,143,0.08)' : 'rgba(226,87,76,0.08)';
+  ctx.fill();
+
+  // line
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = startX + i * stepX;
+    const y = padTop + (1 - (v - min) / range) * plotHeight;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  });
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // last point dot
+  const lastX = startX + (data.length - 1) * stepX;
+  const lastY = padTop + (1 - (data[data.length - 1] - min) / range) * plotHeight;
+  ctx.beginPath();
+  ctx.arc(lastX, lastY, 2.5, 0, Math.PI * 2);
+  ctx.fillStyle = lineColor;
+  ctx.fill();
+}
+
+function openPosition(direction) {
+  const lot = parseFloat(document.getElementById('lot-size').value);
+  if (!lot || lot <= 0) {
+    alert('Enter a lot size first.');
+    return;
+  }
+  const info = PAIRS[currentPair];
+  state.positions.push({
+    pair: currentPair,
+    direction,
+    entry: simPrices[currentPair],
+    lot,
+    decimals: info.decimals
+  });
+  saveState();
+  renderPositions();
+}
+
+function closePosition(idx) {
+  const pos = state.positions[idx];
+  const pl = calcPL(pos);
+  state.balance += pl;
+  state.positions.splice(idx, 1);
+  saveState();
+  renderHome();
+  renderPositions();
+}
+
+function calcPL(pos) {
+  const current = simPrices[pos.pair];
+  const diff = pos.direction === 'buy' ? (current - pos.entry) : (pos.entry - current);
+  // Simplified: 1 standard lot = $100,000 notional, so pip value scales with lot size.
+  return diff * pos.lot * 100000;
+}
+
+function renderPositions() {
+  const list = document.getElementById('positions-list');
+  document.getElementById('sim-balance').textContent = fmtMoney(state.balance);
+
+  if (state.positions.length === 0) {
+    list.innerHTML = '<div class="empty-note">No open positions yet. Place your first practice trade above.</div>';
+    document.getElementById('sim-pl').textContent = fmtMoney(0);
+    document.getElementById('sim-pl').style.color = 'var(--text)';
+    return;
+  }
+
+  let totalPL = 0;
+  list.innerHTML = '';
+  state.positions.forEach((pos, idx) => {
+    const pl = calcPL(pos);
+    totalPL += pl;
+    const row = document.createElement('div');
+    row.className = 'position-row';
+    row.innerHTML = `
+      <div class="pinfo">
+        <div class="p1">${pos.pair} &middot; ${pos.direction.toUpperCase()} &middot; ${pos.lot} lot</div>
+        <div class="p2">Entry ${pos.entry.toFixed(pos.decimals)}</div>
+      </div>
+      <div>
+        <div class="pnl" style="color:${pl >= 0 ? 'var(--up)' : 'var(--down)'}">${pl >= 0 ? '+' : ''}${fmtMoney(pl)}</div>
+        <button class="close-btn" onclick="closePosition(${idx})">Close</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  const plEl = document.getElementById('sim-pl');
+  plEl.textContent = (totalPL >= 0 ? '+' : '') + fmtMoney(totalPL);
+  plEl.style.color = totalPL >= 0 ? 'var(--up)' : 'var(--down)';
+}
+
+/* ---------- UTIL ---------- */
+function fmtMoney(n) {
+  return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/* ---------- INIT ---------- */
+renderHome();
+renderPairTabs();
+renderPrice();
+renderPositions();
+setTimeout(renderChart, 0);
+window.addEventListener('resize', renderChart);
+setInterval(tickPrices, 2000);
+</script>
+</body>
+</html>
