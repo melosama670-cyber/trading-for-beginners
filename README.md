@@ -1,1 +1,1 @@
-# trading-for-beginners
+# STrade Academy
